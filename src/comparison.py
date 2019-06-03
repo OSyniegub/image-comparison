@@ -59,7 +59,6 @@ class Comparison:
             err /= float(img1.size * img2.size)
         else:
             err /= float(8 * 8)
-        print(err)
         return err
 
     def image_comparison(self):
