@@ -43,33 +43,38 @@ class Comparison:
             print("1 argument expected")
             exit(1)
 
-    def threshold(self, err, th=2.9248 * (10 ** (-3))):
+    def threshold(self, err, th=5 * (10 ** (-3))):
         if err == 0:
             return 0
-        elif err <= th:
+        elif 2 * (10 ** (-3)) <= err <= th:
             return 1
+        elif err >= 0.02:
+            return 3
         return 2
 
     # Mean Squared Error
     def mse(self, img1, img2):
         err = np.sum((img1 - img2) ** 2)
-        err /= float(img1.size * img2.size)
+        if img1.size == img2.size:
+            err /= float(img1.size * img2.size)
+        else:
+            err /= float(8 * 8)
+        print(err)
         return err
 
     def image_comparison(self):
-        result = ['duplicate', 'similar', 'modified']
+        result = ['duplicate', 'similar', 'modified', 'different images']
         img1 = np.asarray(self.img1, dtype=np.float)
         img2 = np.asarray(self.img2, dtype=np.float)
         if img1.size == img2.size:
             pass
         elif img1.size > img2.size:
-            img2 = np.asarray(self.img2.resize((img1.shape[1], img1.shape[0]), img.ANTIALIAS), dtype=np.float)
+            img2 = np.asarray(self.img2.resize((8, 8), img.ANTIALIAS), dtype=np.float)
+            img1 = np.asarray(self.img1.resize((8, 8), img.ANTIALIAS), dtype=np.float)
         else:
-            img1 = np.asarray(self.img1.resize((img2.shape[1], img2.shape[0]), img.ANTIALIAS), dtype=np.float)
-        # code below, cause the program works correctly only on duplicates
-        if img1.size == img2.size:
-            return result[self.threshold(self.mse(img1, img2))]
-        return "continue"
+            img1 = np.asarray(self.img1.resize((8, 8), img.ANTIALIAS), dtype=np.float)
+            img2 = np.asarray(self.img2.resize((8, 8), img.ANTIALIAS), dtype=np.float)
+        return result[self.threshold(self.mse(img1, img2))]
 
     def run(self):
         self.read_data(self)
@@ -79,7 +84,5 @@ class Comparison:
                     continue
                 self.img1 = image1
                 self.img2 = image2
-                # code below, cause the program works correctly only on duplicates
                 result = self.image_comparison()
-                if result == "duplicate":
-                    print(self.files[i] + " " + self.files[j] + " - " + result)
+                print(self.files[i] + " " + self.files[j] + " - " + result)
