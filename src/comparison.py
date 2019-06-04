@@ -48,7 +48,7 @@ class Comparison:
             return 0
         elif 2 * (10 ** (-3)) <= err <= th:
             return 1
-        elif err >= 0.02:
+        elif err >= 0.01:
             return 3
         return 2
 
@@ -84,4 +84,5 @@ class Comparison:
                 self.img1 = image1
                 self.img2 = image2
                 result = self.image_comparison()
-                print(self.files[i] + " " + self.files[j] + " - " + result)
+                if not result == "different images":
+                    print(self.files[i] + " " + self.files[j] + " - " + result)
