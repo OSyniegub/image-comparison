@@ -2,6 +2,7 @@ from PIL import Image as img
 import numpy as np
 import sys
 import os
+from multiprocessing import Pool
 
 
 class Comparison:
@@ -61,28 +62,34 @@ class Comparison:
             err /= float(8 * 8)
         return err
 
-    def image_comparison(self):
+    def image_comparison(self, image1, image2):
         result = ['duplicate', 'similar', 'modified', 'different images']
-        img1 = np.asarray(self.img1, dtype=np.float)
-        img2 = np.asarray(self.img2, dtype=np.float)
+        img1 = np.asarray(image1, dtype=np.float)
+        img2 = np.asarray(image2, dtype=np.float)
         if img1.size == img2.size:
             pass
         elif img1.size > img2.size:
-            img2 = np.asarray(self.img2.resize((8, 8), img.ANTIALIAS), dtype=np.float)
-            img1 = np.asarray(self.img1.resize((8, 8), img.ANTIALIAS), dtype=np.float)
+            img2 = np.asarray(image2.resize((8, 8), img.ANTIALIAS), dtype=np.float)
+            img1 = np.asarray(image1.resize((8, 8), img.ANTIALIAS), dtype=np.float)
         else:
-            img1 = np.asarray(self.img1.resize((8, 8), img.ANTIALIAS), dtype=np.float)
-            img2 = np.asarray(self.img2.resize((8, 8), img.ANTIALIAS), dtype=np.float)
+            img1 = np.asarray(image1.resize((8, 8), img.ANTIALIAS), dtype=np.float)
+            img2 = np.asarray(image2.resize((8, 8), img.ANTIALIAS), dtype=np.float)
         return result[self.threshold(self.mse(img1, img2))]
+
+    def run_pool(self, images):
+        for i, image1 in enumerate(images[0]):
+            for j, image2 in enumerate(images[0]):
+                if i == j:
+                    continue
+                result = self.image_comparison(image1, image2)
+                if not result == "different images":
+                    print(images[1][i] + " " + images[1][j] + " - " + result)
 
     def run(self):
         self.read_data(self)
-        for i, image1 in enumerate(self.images):
-            for j, image2 in enumerate(self.images):
-                if i == j:
-                    continue
-                self.img1 = image1
-                self.img2 = image2
-                result = self.image_comparison()
-                if not result == "different images":
-                    print(self.files[i] + " " + self.files[j] + " - " + result)
+        pool = Pool()
+        self_images1 = self.images[:len(self.images) // 2]
+        self_images2 = self.images[len(self.images) // 2:]
+        self_files1 = self.files[:len(self.files) // 2]
+        self_files2 = self.files[len(self.files) // 2:]
+        pool.map(self.run_pool, [[self_images1, self_files1], [self_images2, self_files2]])
